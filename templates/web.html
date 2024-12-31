@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Styled Webpage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            color: #333;
+        }
+
+        /* Navbar */
+        .navbar {
+            width: 100%;
+            background-color: #3498db;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 30px;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .navbar .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .navbar a {
+            color: white;
+            font-size: 18px;
+            text-decoration: none;
+            padding: 10px 15px;
+            transition: background-color 0.3s;
+            border-radius: 5px;
+        }
+
+        .navbar a:hover {
+            background-color: #2980b9;
+        }
+
+        /* Banner Section */
+        .banner {
+            width: 100%;
+            height: 100vh;
+            background: url('https://img.freepik.com/free-photo/variety-fashionable-garments-hang-clothing-boutique-generated-by-ai_188544-27734.jpg') no-repeat center center/cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            margin-top: 60px;
+        }
+
+        .banner::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4); /* Dark overlay */
+        }
+
+        .banner .content {
+            position: relative;
+            color: white;
+            z-index: 1;
+            padding: 20px;
+            max-width: 700px;
+        }
+
+        .banner h1 {
+            font-size: 50px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .banner p {
+            font-size: 20px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .banner .button {
+            background-color: #fff;
+            color: #3498db;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.3s, background-color 0.3s;
+        }
+
+        .banner .button:hover {
+            background-color: #ecf0f1;
+            color: #2980b9;
+            transform: scale(1.05);
+        }
+
+        /* About Section */
+        .about {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 20px;
+            background: #ffffff;
+            width: 100%;
+            max-width: 1200px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin: 50px 0;
+        }
+
+        .about .text {
+            flex: 1;
+            padding-right: 40px;
+        }
+
+        .about .text h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .about .text p {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .about .image {
+            flex: 1;
+            text-align: center;
+        }
+
+        .about .image img {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        /* Reviews Section */
+        .reviews {
+            background-color: #f9f9f9;
+            padding: 60px 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .reviews h2 {
+            font-size: 36px;
+            color: #3498db;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        .reviews .cards {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .review-card {
+            background-color: #fff;
+            padding: 20px;
+            width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .review-card:hover {
+            transform: scale(1.05);
+        }
+
+        .review-card .stars {
+            color: #f39c12;
+            margin: 10px 0;
+        }
+
+        .review-card p {
+            font-size: 16px;
+            color: #555;
+            margin: 15px 0;
+        }
+
+        .review-card .name {
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        /* Footer */
+        .footer {
+            width: 100%;
+            background-color: #3498db;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        .footer p {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .about {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .about .text {
+                padding-right: 0;
+                margin-bottom: 20px;
+            }
+
+            .banner h1 {
+                font-size: 36px;
+            }
+
+            .banner p {
+                font-size: 16px;
+            }
+
+            .review-card {
+                width: 250px;
+            }
+        }
+        a{
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar Section -->
+    <div class="navbar">
+        <div class="logo">StyleAndTurn</div>
+        <nav>
+            <a href="#banner">Home</a>
+            <a href="#about">About</a>
+            <a href="#reviews">Reviews</a>
+            
+        </nav>
+    </div>
+
+    <!-- Banner Section -->
+    <div class="banner" id="banner">
+        <div class="content">
+            <h1>Welcome to StyleAndTurn</h1>
+            <p>Creating beautiful and responsive designs that reflect professionalism and creativity.</p>
+            <a href="{{ url_for('get_started') }}" class="button">Get Started</a>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <div class="about" id="about">
+        <div class="text">
+            <h2>About Us</h2>
+            <p>
+                Our team specializes in crafting designs that not only look great but also provide
+                an intuitive user experience. From concept to implementation, we bring your ideas
+                to life with precision and care.
+            </p>
+        </div>
+        <div class="image">
+            <img src="https://d3hjf51r9j54j7.cloudfront.net/wp-content/uploads/sites/3/2022/08/online-clothes-shopping-wardrobe-phone.jpg" alt="About Image">
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="reviews" id="reviews">
+        <h2>What Our Clients Say</h2>
+        <div class="cards">
+            <div class="review-card">
+                <div class="stars">
+                    &#9733;&#9733;&#9733;&#9733;&#9733;
+                </div>
+                <p>"Fantastic service and great attention to detail! Highly recommend."</p>
+                <div class="name">John Doe</div>
+            </div>
+
+            <div class="review-card">
+                <div class="stars">
+                    &#9733;&#9733;&#9733;&#9733;&#9734;
+                </div>
+                <p>"Very professional and responsive. Loved the final design!"</p>
+                <div class="name">Jane Smith</div>
+            </div>
+
+            <div class="review-card">
+                <div class="stars">
+                    &#9733;&#9733;&#9733;&#9733;&#9733;
+                </div>
+                <p>"Amazing experience! They nailed every aspect of the design."</p>
+                <div class="name">Mark Wilson</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Section -->
+    <div class="footer" id="footer">
+        <p>© 2024 My Webpage. All Rights Reserved.</p>
+    </div>
+</body>
+</html>

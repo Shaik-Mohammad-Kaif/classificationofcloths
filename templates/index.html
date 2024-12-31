@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clothing Item Recognition</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #e6e6e6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+            overflow: auto;
+        }
+
+        /* Container Styles */
+        .container {
+            background: white;
+            margin-top: 5px;
+            padding: 40px 50px;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            box-sizing: border-box;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: 0 20px;
+            margin-top: 90px; /* Adjust for navbar height */
+            background-color: #ffffff;
+        }
+
+        /* Heading Styles */
+        h1 {
+            font-size: 40px;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            font-size: 22px;
+            color: #666;
+            margin-top: 20px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            width: 100%;
+            background-color: #2980b9;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.137);
+            display: flex;
+            justify-content: space-between; /* Space between logo and links */
+            padding: 15px 30px;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+        }
+
+        .navbar .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .navbar a {
+            color: white;
+            font-size: 18px;
+            text-decoration: none;
+            padding: 10px 15px;
+            transition: background-color 0.3s;
+            border-radius: 5px;
+        }
+
+        .navbar a:hover {
+            background-color: #3498db;
+        }
+
+        /* Form and Button Styles */
+        .file-input, .button {
+            font-size: 18px;
+            padding: 15px 30px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: 0.2s ease-in-out;
+            width: 100%;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .file-input {
+            padding: 15px 25px;
+            background: #fff;
+            color: #333;
+            border: 2px solid #ddd;
+            display: inline-block;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .file-input:hover {
+            border-color: #2980b9;
+        }
+
+        .file-input input[type="file"] {
+            display: none;
+        }
+
+        .file-input i {
+            margin-right: 10px;
+        }
+
+        .button {
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            text-transform: uppercase;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 1px;
+        }
+
+        .button i {
+            margin-right: 10px;
+        }
+
+        .button:hover {
+            background-color: #3498db;
+            transform: scale(1.02);
+        }
+
+        .button:active {
+            background-color: #2980b9;
+        }
+
+        /* Image Preview Section */
+        #image-preview {
+            width: 100%;
+            height: 300px;
+            border: 2px dashed #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            background-color: #fafafa;
+            border-radius: 12px;
+        }
+
+        #image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* Webcam Section */
+        #video-container {
+            margin-bottom: 20px;
+            width: 100%;
+            height: 300px;
+            border: 2px dashed #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fafafa;
+            border-radius: 12px;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 35px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 700px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            color: #333;
+            text-align: left;
+            font-size: 18px;
+        }
+
+        .modal h2 {
+            font-size: 26px;
+            margin-bottom: 25px;
+        }
+
+        .close {
+            font-size: 32px;
+            font-weight: bold;
+            color: #bbb;
+            cursor: pointer;
+            float: right;
+        }
+
+        .close:hover {
+            color: #2c3e50;
+        }
+
+        .results-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .results-list li {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .results-list li:last-child {
+            border-bottom: none;
+        }
+
+        .results-list li span {
+            font-weight: 600;
+            color: #2980b9;
+        }
+
+        /* Icons for Buttons */
+        .file-input i, .button i {
+            font-size: 20px;
+            color: #fff;
+        }
+
+        /* Media Queries */
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px;
+            }
+
+            .file-input, .button {
+                padding: 14px;
+            }
+
+            .navbar {
+                flex-direction: column; /* Stack navbar items vertically on small screens */
+                align-items: flex-start;
+            }
+
+            .navbar a {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="logo">StyleTryOn</div>
+        <div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Clothing Item Recognition</h1>
+
+        <!-- Form for file upload -->
+        <form action="/predict" method="post" enctype="multipart/form-data" id="upload-form">
+            <div>
+                <label for="file">
+                    <i class="fa fa-upload"></i> Upload an Image
+                </label><br>
+                <input type="file" name="file" id="file" class="file-input" required><br>
+            </div>
+            <div id="image-preview">
+                <span><i class="fa fa-image"></i> Upload an Image to Preview</span>
+            </div>
+            <button type="submit" class="button" id="predict-btn">
+                <i class="fa fa-magic"></i> Predict
+            </button>
+        </form>
+
+        <h2>OR</h2>
+
+        <!-- Webcam option -->
+        <button id="start-webcam" class="button">
+            <i class="fa fa-video-camera"></i> Use Webcam
+        </button>
+
+        <div id="video-container">
+            <video id="video" autoplay></video>
+        </div>
+
+        <button id="capture" class="button">
+            <i class="fa fa-camera"></i> Capture Image
+        </button>
+
+        <!-- Error message -->
+        <div class="error" id="error"></div>
+
+        <!-- Modal for showing results (for image upload and webcam) -->
+        <div id="results" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Predictions:</h2>
+                <ul id="prediction-list" class="results-list"></ul>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const startWebcamButton = document.getElementById('start-webcam');
+        const captureButton = document.getElementById('capture');
+        const errorDiv = document.getElementById('error');
+        const resultsModal = document.getElementById('results');
+        const predictionList = document.getElementById('prediction-list');
+        const closeModal = document.querySelector('.close');
+        const imageInput = document.getElementById('file');
+        const imagePreview = document.getElementById('image-preview');
+        const predictButton = document.getElementById('predict-btn');
+
+        // Image preview for upload
+        imageInput.addEventListener('change', () => {
+            const file = imageInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.innerHTML = `<img src="${e.target.result}" alt="Image Preview" />`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Start webcam
+        startWebcamButton.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                errorDiv.textContent = 'Unable to access the webcam';
+            }
+        });
+
+        // Capture image and send to server
+        captureButton.addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/png');
+
+            // Send the image to the server
+            fetch('/predict-webcam', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: dataUrl.split(',')[1] }) // Send base64 image
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        errorDiv.textContent = data.error;
+                    } else {
+                        // Show predictions in modal
+                        predictionList.innerHTML = ` 
+                            <li><span>Gender:</span> ${data.predictions[0]}</li>
+                            <li><span>Category:</span> ${data.predictions[1]}</li>
+                            <li><span>Article Type:</span> ${data.predictions[2]}</li>
+                            <li><span>Base Colour:</span> ${data.predictions[3]}</li>
+                            <li><span>Season:</span> ${data.predictions[4]}</li>
+                            <li><span>Usage:</span> ${data.predictions[5]}</li>
+                        `;
+                        resultsModal.style.display = 'flex';
+                    }
+                })
+                .catch(err => {
+                    errorDiv.textContent = 'Error predicting from webcam image';
+                });
+        });
+
+        // Close modal
+        closeModal.addEventListener('click', () => {
+            resultsModal.style.display = 'none';
+        });
+
+        // Image upload result handling (Popup)
+        const form = document.getElementById('upload-form');
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        errorDiv.textContent = data.error;
+                    } else {
+                        // Show predictions in modal
+                        predictionList.innerHTML = ` 
+                            <li><span>Gender:</span> ${data.predictions[0]}</li>
+                            <li><span>Category:</span> ${data.predictions[1]}</li>
+                            <li><span>Article Type:</span> ${data.predictions[2]}</li>
+                            <li><span>Base Colour:</span> ${data.predictions[3]}</li>
+                            <li><span>Season:</span> ${data.predictions[4]}</li>
+                            <li><span>Usage:</span> ${data.predictions[5]}</li>
+                        `;
+                        resultsModal.style.display = 'flex';
+                    }
+                })
+                .catch(err => {
+                    errorDiv.textContent = 'Error predicting image';
+                });
+        });
+
+        
+
+    </script>
+</body>
+</html>
