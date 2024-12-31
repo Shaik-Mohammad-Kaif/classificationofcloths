@@ -1,15 +1,21 @@
 from flask import Flask, request, jsonify, render_template
 import os
 import numpy as np
-import matplotlib.pyplot as plt
+import json
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-import json
+
+# Disable GPU to avoid cuDNN/cuBLAS issues
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # Define the Recognize_Item class
 class Recognize_Item:
-    def __init__(self, model_path= r'C:\Users\peket\Documents\Cloth_Classification\consolidated_model.h5'):
-        self.model_path = model_path
+    def __init__(self, model_path=None):
+        # Use a relative path for the model
+        if model_path is None:
+            self.model_path = os.path.join(os.getcwd(), 'data', 'consolidated_model.h5')
+        else:
+            self.model_path = model_path
         self.model = self.load_model()
 
     def load_model(self):
@@ -25,7 +31,8 @@ class Recognize_Item:
         return x / 255.0
 
     def class_map(self, e):
-        label_map = json.load(open(r'C:\Users\peket\Documents\Cloth_Classification\label_map.json'))
+        label_map_path = os.path.join(os.getcwd(), 'data', 'label_map.json')
+        label_map = json.load(open(label_map_path))
         gender = label_map['gen_names'][e[0]]
         subCategory = label_map['sub_names'][e[1]]
         articleType = label_map['art_names'][e[2]]
@@ -78,4 +85,5 @@ def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

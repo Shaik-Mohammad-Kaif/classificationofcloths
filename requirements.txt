@@ -1,0 +1,8 @@
+Flask
+tensorflow
+numpy
+pillow
+requests
+werkzeug
+gunicorn
+matplotlib
