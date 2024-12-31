@@ -1,21 +1,17 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 import os
 import numpy as np
 import json
 from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
-
-# Disable GPU to avoid cuDNN/cuBLAS issues
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+from tensorflow.keras.preprocessing.image import img_to_array
+from PIL import Image
+import base64
+import io
 
 # Define the Recognize_Item class
 class Recognize_Item:
-    def __init__(self, model_path=None):
-        # Use a relative path for the model
-        if model_path is None:
-            self.model_path = os.path.join(os.getcwd(), 'data', 'consolidated_model.h5')
-        else:
-            self.model_path = model_path
+    def __init__(self, model_path='models/consolidated_model.h5'):
+        self.model_path = model_path
         self.model = self.load_model()
 
     def load_model(self):
@@ -26,13 +22,18 @@ class Recognize_Item:
             raise Exception('#-----Failed to load model file-----#')
 
     def process_img(self, image_path):
-        img = image.load_img(image_path, color_mode='rgb', target_size=(112, 112, 3))
-        x = image.img_to_array(img).astype('float32')
-        return x / 255.0
+        img = Image.open(image_path).convert("RGB").resize((112, 112))
+        x = img_to_array(img).astype('float32') / 255.0
+        return x
+
+    def process_webcam_img(self, img):
+        img = img.convert("RGB").resize((112, 112))
+        x = img_to_array(img).astype('float32') / 255.0
+        return x
 
     def class_map(self, e):
-        label_map_path = os.path.join(os.getcwd(), 'data', 'label_map.json')
-        label_map = json.load(open(label_map_path))
+        # Updated path to the label map JSON file
+        label_map = json.load(open('models/label_map.json'))
         gender = label_map['gen_names'][e[0]]
         subCategory = label_map['sub_names'][e[1]]
         articleType = label_map['art_names'][e[2]]
@@ -48,14 +49,28 @@ class Recognize_Item:
         return self.class_map(flatten_labels)
 
     def predict_all(self, image):
-        x_image = np.expand_dims(image, axis=0)
+        x_image = np.expand_dims(image, axis=0)  # Add batch dimension
         return self.tmp_fn(self.model.predict(x_image))
 
 # Initialize Flask app
 app = Flask(__name__)
 reco = Recognize_Item()
 
-# Route to upload image and predict
+# Decode base64 image
+def decode_base64_image(base64_str):
+    decoded = base64.b64decode(base64_str)
+    img = Image.open(io.BytesIO(decoded))
+    return img
+
+# Routes
+@app.route('/')
+def index():
+    return render_template('web.html')  # This will load web.html on initial load
+
+@app.route('/get-started')
+def get_started():
+    return render_template('index.html')  # Redirecting to index.html when the "Get Started" button is clicked
+
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
@@ -75,15 +90,27 @@ def predict():
         image = reco.process_img(file_path)
         predictions = reco.predict_all(image)
         os.remove(file_path)  # Clean up uploaded file
-        return render_template('index.html', predictions=predictions)
+        return jsonify({'predictions': predictions})  # Return predictions as JSON
     except Exception as e:
-        return render_template('index.html', error=str(e))
+        return jsonify({'error': str(e)}), 500
 
-# Route for testing server
-@app.route('/')
-def index():
-    return render_template('index.html')
+
+@app.route('/predict-webcam', methods=['POST'])
+def predict_webcam():
+    try:
+        # Get base64 image from request
+        data = request.get_json()
+        base64_image = data.get("image", "")
+        if not base64_image:
+            return jsonify({"error": "No image data provided"}), 400
+
+        # Decode and process the image
+        img = decode_base64_image(base64_image)
+        img_array = reco.process_webcam_img(img)
+        predictions = reco.predict_all(img_array)
+        return jsonify({"predictions": predictions})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
