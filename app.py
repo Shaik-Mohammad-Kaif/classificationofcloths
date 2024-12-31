@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify, render_template
 import os
 import numpy as np
-import matplotlib.pyplot as plt
+import json
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-import json
+
+# Disable GPU to avoid cuDNN/cuBLAS issues
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # Define the Recognize_Item class
 class Recognize_Item:
