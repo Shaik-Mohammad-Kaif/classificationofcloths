@@ -1,61 +1,70 @@
 from flask import Flask, request, jsonify, render_template
 import os
 import numpy as np
-import json
 from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
-
-# Disable GPU to avoid cuDNN/cuBLAS issues
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-# Define the Recognize_Item class
-class Recognize_Item:
-    def __init__(self, model_path=None):
-        # Use a relative path for the model
-        if model_path is None:
-            self.model_path = os.path.join(os.getcwd(), 'data', 'consolidated_model.h5')
-        else:
-            self.model_path = model_path
-        self.model = self.load_model()
-
-    def load_model(self):
-        try:
-            item_reco_model = load_model(self.model_path)
-            return item_reco_model
-        except Exception:
-            raise Exception('#-----Failed to load model file-----#')
-
-    def process_img(self, image_path):
-        img = image.load_img(image_path, color_mode='rgb', target_size=(112, 112, 3))
-        x = image.img_to_array(img).astype('float32')
-        return x / 255.0
-
-    def class_map(self, e):
-        label_map_path = os.path.join(os.getcwd(), 'data', 'label_map.json')
-        label_map = json.load(open(label_map_path))
-        gender = label_map['gen_names'][e[0]]
-        subCategory = label_map['sub_names'][e[1]]
-        articleType = label_map['art_names'][e[2]]
-        baseColour = label_map['col_names'][e[3]]
-        season = label_map['sea_names'][e[4]]
-        usage = label_map['use_names'][e[5]]
-        return [gender, subCategory, articleType, baseColour, season, usage]
-
-    def tmp_fn(self, one_hot_labels):
-        flatten_labels = []
-        for i in range(len(one_hot_labels)):
-            flatten_labels.append(np.argmax(one_hot_labels[i], axis=-1)[0])
-        return self.class_map(flatten_labels)
-
-    def predict_all(self, image):
-        x_image = np.expand_dims(image, axis=0)
-        return self.tmp_fn(self.model.predict(x_image))
+from tensorflow.keras.preprocessing.image import img_to_array
+from PIL import Image
+import base64
+import io
+import json
+from werkzeug.utils import secure_filename
 
 # Initialize Flask app
 app = Flask(__name__)
-reco = Recognize_Item()
 
-# Route to upload image and predict
+# Load model and label map once at startup
+MODEL_PATH = 'models/consolidated_model.h5'
+LABEL_MAP_PATH = 'models/label_map.json'
+
+try:
+    MODEL = load_model(MODEL_PATH)
+    LABEL_MAP = json.load(open(LABEL_MAP_PATH))
+except Exception as e:
+    raise RuntimeError(f"Failed to load model or label map: {e}")
+
+# Prediction helper class
+class Recognize_Item:
+    @staticmethod
+    def process_img(image):
+        img = image.convert("RGB").resize((112, 112))
+        x = img_to_array(img).astype('float32') / 255.0
+        return x
+
+    @staticmethod
+    def class_map(indices):
+        gender = LABEL_MAP['gen_names'][indices[0]]
+        subCategory = LABEL_MAP['sub_names'][indices[1]]
+        articleType = LABEL_MAP['art_names'][indices[2]]
+        baseColour = LABEL_MAP['col_names'][indices[3]]
+        season = LABEL_MAP['sea_names'][indices[4]]
+        usage = LABEL_MAP['use_names'][indices[5]]
+        return [gender, subCategory, articleType, baseColour, season, usage]
+
+    @staticmethod
+    def tmp_fn(predictions):
+        indices = [np.argmax(pred, axis=-1)[0] for pred in predictions]
+        return Recognize_Item.class_map(indices)
+
+    @staticmethod
+    def predict_all(image_array):
+        x_image = np.expand_dims(image_array, axis=0)  # Add batch dimension
+        predictions = MODEL.predict(x_image)
+        return Recognize_Item.tmp_fn(predictions)
+
+# Decode base64 image
+def decode_base64_image(base64_str):
+    decoded = base64.b64decode(base64_str)
+    return Image.open(io.BytesIO(decoded))
+
+# Routes
+@app.route('/')
+def index():
+    return render_template('web.html')
+
+@app.route('/get-started')
+def get_started():
+    return render_template('index.html')
+
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
@@ -65,25 +74,34 @@ def predict():
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
 
-    # Save the uploaded file
-    file_path = os.path.join('uploads', file.filename)
+    # Save and process uploaded file securely
     os.makedirs('uploads', exist_ok=True)
+    file_path = os.path.join('uploads', secure_filename(file.filename))
     file.save(file_path)
 
-    # Process and predict
     try:
-        image = reco.process_img(file_path)
-        predictions = reco.predict_all(image)
+        image = Image.open(file_path)
+        processed_image = Recognize_Item.process_img(image)
+        predictions = Recognize_Item.predict_all(processed_image)
+    finally:
         os.remove(file_path)  # Clean up uploaded file
-        return render_template('index.html', predictions=predictions)
-    except Exception as e:
-        return render_template('index.html', error=str(e))
 
-# Route for testing server
-@app.route('/')
-def index():
-    return render_template('index.html')
+    return jsonify({'predictions': predictions})
+
+@app.route('/predict-webcam', methods=['POST'])
+def predict_webcam():
+    data = request.get_json()
+    base64_image = data.get("image", "")
+    if not base64_image:
+        return jsonify({"error": "No image data provided"}), 400
+
+    try:
+        img = decode_base64_image(base64_image)
+        processed_image = Recognize_Item.process_img(img)
+        predictions = Recognize_Item.predict_all(processed_image)
+        return jsonify({"predictions": predictions})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
